@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>食物卡路里查询</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* 顶部导航 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* 搜索区域 */
+        .search-container {
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #f5f5f5;
+            border-radius: 25px;
+            padding: 10px 15px;
+            gap: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .search-box .search-icon {
+            color: #999;
+            font-size: 18px;
+        }
+
+        .search-box .clear-btn {
+            color: #999;
+            cursor: pointer;
+            display: none;
+        }
+
+        /* 热门搜索 */
+        .hot-search {
+            padding: 10px 15px;
+            background: white;
+            margin-bottom: 10px;
+        }
+
+        .hot-search h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .hot-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .hot-tag {
+            padding: 6px 12px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .hot-tag:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* 食物列表 */
+        .food-list {
+            padding: 0 15px;
+        }
+
+        .food-item {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .food-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .food-item .food-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin-right: 15px;
+        }
+
+        .food-item .food-info {
+            flex: 1;
+        }
+
+        .food-item .food-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .food-item .food-cal {
+            font-size: 14px;
+            color: #ff6b6b;
+        }
+
+        .food-item .food-unit {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* 详情页面 */
+        .detail-page {
+            display: none;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .detail-page.active {
+            display: block;
+        }
+
+        .detail-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .detail-header .food-title {
+            flex: 1;
+        }
+
+        .detail-header .food-title h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .recommend-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        /* 快捷操作栏 */
+        .quick-actions {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .action-btn .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .action-btn .label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .action-btn.active .icon {
+            background: #fff3cd;
+        }
+
+        .action-btn.active .label {
+            color: #f5a623;
+        }
+
+        /* 信息卡片 */
+        .info-card {
+            background: white;
+            margin: 0 15px 10px;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .info-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 血糖相关 */
+        .glycemic-section {
+            display: flex;
+            gap: 15px;
+        }
+
+        .glycemic-item {
+            flex: 1;
+            background: #fff5f5;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .glycemic-item .label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .glycemic-item .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ff4757;
+        }
+
+        .glycemic-item .status {
+            display: inline-block;
+            background: #ff4757;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .glycemic-item.low .value,
+        .glycemic-item.low .status {
+            color: #2ed573;
+        }
+        .glycemic-item.low .status {
+            background: #2ed573;
+        }
+        .glycemic-item.medium .value,
+        .glycemic-item.medium .status {
+            color: #ffa502;
+        }
+        .glycemic-item.medium .status {
+            background: #ffa502;
+        }
+
+        /* 热量显示 */
+        .calorie-display {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .calorie-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .calorie-unit {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .calorie-compare {
+            font-size: 13px;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        /* 营养素环形图 */
+        .nutrient-rings {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+        }
+
+        .nutrient-ring {
+            text-align: center;
+        }
+
+        .ring-container {
+            width: 70px;
+            height: 70px;
+            position: relative;
+            margin: 0 auto 8px;
+        }
+
+        .ring-container svg {
+            transform: rotate(-90deg);
+        }
+
+        .ring-bg {
+            fill: none;
+            stroke: #f0f0f0;
+            stroke-width: 8;
+        }
+
+        .ring-progress {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .ring-progress.protein {
+            stroke: #3b82f6;
+        }
+
+        .ring-progress.fat {
+            stroke: #f59e0b;
+        }
+
+        .ring-progress.carbs {
+            stroke: #8b5cf6;
+        }
+
+        .ring-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .nutrient-label {
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* 营养成分表 */
+        .nutrition-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .nutrition-table th {
+            text-align: left;
+            padding: 12px 10px;
+            background: #f8f8f8;
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .nutrition-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .nutrition-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .nutrition-table .nutrient-name {
+            color: #333;
+        }
+
+        .nutrition-table .nutrient-value {
+            text-align: right;
+            color: #666;
+        }
+
+        .nutrition-table .nutrient-nrv {
+            text-align: right;
+            color: #999;
+            font-size: 13px;
+        }
+
+        /* 单位重量 */
+        .unit-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .unit-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #f8f8f8;
+            border-radius: 8px;
+        }
+
+        .unit-item .unit-name {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .unit-item .unit-cal {
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* 浮动按钮 */
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff9a56 0%, #ff6b6b 100%);
+            color: white;
+            border: none;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(255,107,107,0.4);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 无结果提示 */
+        .no-result {
+            text-align: center;
+            padding: 50px 20px;
+            color: #999;
+        }
+
+        .no-result .icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        /* 食用建议 */
+        .advice-text {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        /* 隐藏主页面 */
+        .main-page.hidden {
+            display: none;
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .info-card {
+            animation: fadeIn 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- 主页面 -->
+    <div class="main-page" id="mainPage">
+        <div class="header">
+            <h1>食物卡路里查询</h1>
+        </div>
+
+        <div class="search-container">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="搜索食物名称...">
+                <span class="clear-btn" id="clearBtn">✕</span>
+            </div>
+        </div>
+
+        <div class="hot-search">
+            <h3>热门搜索</h3>
+            <div class="hot-tags" id="hotTags">
+                <span class="hot-tag">米饭</span>
+                <span class="hot-tag">面条</span>
+                <span class="hot-tag">鸡蛋</span>
+                <span class="hot-tag">苹果</span>
+                <span class="hot-tag">牛奶</span>
+                <span class="hot-tag">鸡胸肉</span>
+                <span class="hot-tag">豆腐</span>
+                <span class="hot-tag">香蕉</span>
+            </div>
+        </div>
+
+        <div class="food-list" id="foodList">
+            <!-- 食物列表将通过JS动态生成 -->
+        </div>
+    </div>
+
+    <!-- 详情页面 -->
+    <div class="detail-page" id="detailPage">
+        <div class="detail-header">
+            <span class="back-btn" id="backBtn">←</span>
+            <div class="food-title">
+                <h2 id="detailName">米饭</h2>
+                <div class="recommend-badge" id="recommendBadge">
+                    <span>✓</span>
+                    <span>推荐食用</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <div class="action-btn">
+                <div class="icon">⚖️</div>
+                <span class="label">估重</span>
+            </div>
+            <div class="action-btn" id="favoriteBtn">
+                <div class="icon">⭐</div>
+                <span class="label">收藏</span>
+            </div>
+            <div class="action-btn">
+                <div class="icon">📊</div>
+                <span class="label">对比</span>
+            </div>
+            <div class="action-btn">
+                <div class="icon">📝</div>
+                <span class="label">纠错</span>
+            </div>
+        </div>
+
+        <!-- 食用建议 -->
+        <div class="info-card" id="adviceCard">
+            <h3>💡 食用建议</h3>
+            <p class="advice-text" id="adviceText"></p>
+        </div>
+
+        <!-- 血糖相关 -->
+        <div class="info-card">
+            <h3>🩸 血糖相关</h3>
+            <div class="glycemic-section">
+                <div class="glycemic-item" id="giItem">
+                    <div class="label">GI (血糖指数)</div>
+                    <div class="value" id="giValue">90</div>
+                    <span class="status" id="giStatus">高</span>
+                </div>
+                <div class="glycemic-item" id="glItem">
+                    <div class="label">GL (血糖负荷)</div>
+                    <div class="value" id="glValue">25</div>
+                    <span class="status" id="glStatus">高</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 热量和营养成分 -->
+        <div class="info-card">
+            <h3>🔥 热量和营养成分</h3>
+            <div class="calorie-display">
+                <span class="calorie-value" id="calorieValue">116</span>
+                <span class="calorie-unit">千卡/100克</span>
+                <p class="calorie-compare" id="calorieCompare">热量低于 90% 的谷薯制品</p>
+            </div>
+            <div class="nutrient-rings">
+                <div class="nutrient-ring">
+                    <div class="ring-container">
+                        <svg width="70" height="70">
+                            <circle class="ring-bg" cx="35" cy="35" r="28"></circle>
+                            <circle class="ring-progress protein" cx="35" cy="35" r="28" 
+                                stroke-dasharray="176" stroke-dashoffset="160" id="proteinRing"></circle>
+                        </svg>
+                        <span class="ring-value" id="proteinPercent">9%</span>
+                    </div>
+                    <span class="nutrient-label">蛋白质</span>
+                </div>
+                <div class="nutrient-ring">
+                    <div class="ring-container">
+                        <svg width="70" height="70">
+                            <circle class="ring-bg" cx="35" cy="35" r="28"></circle>
+                            <circle class="ring-progress fat" cx="35" cy="35" r="28" 
+                                stroke-dasharray="176" stroke-dashoffset="172" id="fatRing"></circle>
+                        </svg>
+                        <span class="ring-value" id="fatPercent">2%</span>
+                    </div>
+                    <span class="nutrient-label">脂肪</span>
+                </div>
+                <div class="nutrient-ring">
+                    <div class="ring-container">
+                        <svg width="70" height="70">
+                            <circle class="ring-bg" cx="35" cy="35" r="28"></circle>
+                            <circle class="ring-progress carbs" cx="35" cy="35" r="28" 
+                                stroke-dasharray="176" stroke-dashoffset="20" id="carbsRing"></circle>
+                        </svg>
+                        <span class="ring-value" id="carbsPercent">89%</span>
+                    </div>
+                    <span class="nutrient-label">碳水</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 详细营养表 -->
+        <div class="info-card">
+            <h3>📋 营养成分表</h3>
+            <table class="nutrition-table">
+                <thead>
+                    <tr>
+                        <th>营养素</th>
+                        <th>含量</th>
+                        <th>NRV%</th>
+                    </tr>
+                </thead>
+                <tbody id="nutritionTableBody">
+                    <!-- 动态生成 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 单位重量 -->
+        <div class="info-card">
+            <h3>📏 单位重量换算</h3>
+            <div class="unit-list" id="unitList">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+
+        <button class="fab" id="recordBtn">📝</button>
+    </div>
+
+    <script>
+        // 食物数据库
+        const foodDatabase = [
+            {
+                id: 1,
+                name: '米饭',
+                emoji: '🍚',
+                calorie: 116,
+                protein: 2.6,
+                fat: 0.3,
+                carbs: 25.9,
+                fiber: 0.3,
+                gi: 90,
+                gl: 25,
+                category: 'grain',
+                categoryCompare: '谷薯制品',
+                comparePercent: 90,
+                recommend: true,
+                advice: '米饭主要成分是碳水化合物，含有少量蛋白质、脂肪，以及膳食纤维、微量元素和不饱和脂肪酸。添加剂少，能量密度较低，适合长期食用。但由于GI值较高，糖尿病患者应控制摄入量。',
+                units: [
+                    { name: '克', gram: 1, cal: 1 },
+                    { name: '勺', gram: 40, cal: 46 },
+                    { name: '口', gram: 20, cal: 23 },
+                    { name: '碗(小)', gram: 150, cal: 174 },
+                    { name: '碗(大)', gram: 180, cal: 209 }
+                ]
+            },
+            {
+                id: 2,
+                name: '面条',
+                emoji: '🍜',
+                calorie: 137,
+                protein: 4.5,
+                fat: 0.8,
+                carbs: 28.5,
+                fiber: 0.8,
+                gi: 81,
+                gl: 23,
+                category: 'grain',
+                categoryCompare: '谷薯制品',
+                comparePercent: 75,
+                recommend: true,
+                advice: '面条富含碳水化合物，蛋白质含量略高于米饭。建议选择全麦面条或杂粮面条，营养价值更高，GI值相对较低。',
+                units: [
+                    { name: '克', gram: 1, cal: 1 },
+                    { name: '筷子夹', gram: 30, cal: 41 },
+                    { name: '小碗', gram: 150, cal: 206 },
+                    { name: '大碗', gram: 250, cal: 343 }
+                ]
+            },
+            {
+                id: 3,
+                name: '鸡蛋',
+                emoji: '🥚',
+                calorie: 144,
+                protein: 13.3,
+                fat: 8.8,
+                carbs: 2.8,
+                fiber: 0,
+                gi: 30,
+                gl: 1,
+                category: 'protein',
+                categoryCompare: '蛋类',
+                comparePercent: 60,
+                recommend: true,
+                advice: '鸡蛋是优质蛋白质来源，含有人体必需的所有氨基酸。还富含卵磷脂、维生素A、D、E等营养素。每天1-2个鸡蛋是健康的饮食选择。',
+                units: [
+                    { name: '克', gram: 1, cal: 1 },
+                    { name: '个(小)', gram: 40, cal: 58 },
+                    { name: '个(中)', gram: 50, cal: 72 },
+                    { name: '个(大)', gram: 60, cal: 86 }
+                ]
+            },
+            {
+                id: 4,
+                name: '苹果',
+                emoji: '🍎',
+                calorie: 52,
+                protein: 0.3,
+                fat: 0.2,
+                carbs: 13.8,
+                fiber: 1.7,
+                gi: 36,
+                gl: 5,
+                category: 'fruit',
+                categoryCompare: '水果',
+                comparePercent: 85,
+                recommend: true,
+                advice: '苹果富含膳食纤维、维生素C和多种抗氧化物质。低热量、低GI值，是减肥和控制血糖的理想水果。建议带皮食用，营养更丰富。',
+                units: [
+                    { name: '克', gram: 1, cal: 1 },
+                    { name: '片', gram: 30, cal: 16 },
+                    { name: '个(小)', gram: 120, cal: 62 },
+                    { name: '个(大)', gram: 200, cal: 104 }
+                ]
+            },
+            {
+                id: 5,
+                name: '牛奶',
+                emoji: '🥛',
+                calorie: 54,
+                protein: 3.0,
+                fat: 3.2,
+                carbs: 4.9,
+                fiber: 0,
+                gi: 27,
+                gl: 2,
+                category: 'dairy',
+                categoryCompare: '乳制品',
+                comparePercent: 70,
+                recommend: true,
+                advice: '牛奶是优质蛋白质和钙的良好来源，还含有维生素D、B族维生素等。建议每天饮用300ml左右。乳糖不耐受者可选择酸奶或低乳糖牛奶。',
+                units: [
+                    { name: '毫升', gram: 1, cal: 1 },
+                    { name: '小杯', gram: 150, cal: 81 },
+                    { name: '标准杯', gram: 250, cal: 135 },
+                    { name: '大杯', gram: 350, cal: 189 }
+                ]
+            },
+            {
+                id: 6,
+                name: '鸡胸肉',
+                emoji: '🍗',
+                calorie: 133,
+                protein: 19.4,
+                fat: 5.0,
+                carbs: 2.5,
+                fiber: 0,
+                gi: 45,
+                gl: 1,
+                category: 'meat',
+                categoryCompare: '肉类',
+                comparePercent: 50,
+                recommend: true,
+                advice: '鸡胸肉是高蛋白、低脂肪的优质肉类，非常适合健身和减肥人群。含有丰富的B族维生素和矿物质。建议去皮食用，热量更低。',
+                units: [
+                    { name: '克', gram: 1, cal: 1 },
+                    { name: '小块', gram: 50, cal: 67 },
+                    { name: '中块', gram: 100, cal: 133 },
+                    { name: '大块', gram: 150, cal: 200 }
+                ]
+            },
+            {
+                id: 7,
+                name: '豆腐',
+                emoji: '🧈',
+                calorie: 81,
+                protein: 8.1,
+                fat: 3.7,
+                carbs: 4.2,
+                fiber: 0.4,
+                gi: 32,
+                gl: 1,
+                category: 'protein',
+                categoryCompare: '豆制品',
+                comparePercent: 65,
+                recommend: true,
+                advice: '豆腐是植物性优质蛋白来源，含有丰富的钙、铁等矿物质。低热量、低GI值，适合各类人群食用。对素食者来说是很好的蛋白质补充来源。',
+                units: [
+                    { name: '克', gram: 1, cal: 1 },
+                    { name: '小块', gram: 50, cal: 41 },
+                    { name: '中块', gram: 100, cal: 81 },
+                    { name: '大块', gram: 200, cal: 162 }
+                ]
+            },
+            {
+                id: 8,
+                name: '香蕉',
+                emoji: '🍌',
+                calorie: 93,
+                protein: 1.2,
+                fat: 0.2,
+                carbs: 22.0,
+                fiber: 1.8,
+                gi: 52,
+                gl: 11,
+                category: 'fruit',
+                categoryCompare: '水果',
+                comparePercent: 60,
+                recommend: true,
+                advice: '香蕉富含钾元素，有助于维持心血管健康。还含有维生素B6和膳食纤维。运动前后食用可快速补充能量。但糖分较高，糖尿病患者需适量。',
+                units: [
+                    { name: '克', gram: 1, cal: 1 },
+                    { name: '根(小)', gram: 80, cal: 74 },
+                    { name: '根(中)', gram: 120, cal: 112 },
+                    { name: '根(大)', gram: 150, cal: 140 }
+                ]
+            },
+            {
+                id: 9,
+                name: '黄瓜',
+                emoji: '🥒',
+                calorie: 15,
+                protein: 0.8,
+                fat: 0.2,
+                carbs: 3.6,
+                fiber: 0.5,
+                gi: 15,
+                gl: 1,
+                category: 'vegetable',
+                categoryCompare: '蔬菜',
+                comparePercent: 95,
+                recommend: true,
+                advice: '黄瓜热量极低，含水量高达96%，是减肥的理想食物。含有丰富的维生素C和钾，有利尿消肿的作用。生吃或凉拌最佳。',
+                units: [
+                    { name: '克', gram: 1, cal: 0 },
+                    { name: '片', gram: 10, cal: 2 },
+                    { name: '根(小)', gram: 100, cal: 15 },
+                    { name: '根(大)', gram: 200, cal: 30 }
+                ]
+            },
+            {
+                id: 10,
+                name: '番茄',
+                emoji: '🍅',
+                calorie: 18,
+                protein: 0.9,
+                fat: 0.2,
+                carbs: 4.0,
+                fiber: 0.5,
+                gi: 15,
+                gl: 1,
+                category: 'vegetable',
+                categoryCompare: '蔬菜',
+                comparePercent: 92,
+                recommend: true,
+                advice: '番茄富含番茄红素、维生素C和钾，具有很强的抗氧化作用。低热量、低GI值，适合各类人群。熟吃更有利于番茄红素的吸收。',
+                units: [
+                    { name: '克', gram: 1, cal: 0 },
+                    { name: '片', gram: 20, cal: 4 },
+                    { name: '个(小)', gram: 80, cal: 14 },
+                    { name: '个(大)', gram: 150, cal: 27 }
+                ]
+            },
+            {
+                id: 11,
+                name: '猪肉',
+                emoji: '🥩',
+                calorie: 143,
+                protein: 20.3,
+                fat: 6.2,
+                carbs: 0,
+                fiber: 0,
+                gi: 45,
+                gl: 0,
+                category: 'meat',
+                categoryCompare: '肉类',
+                comparePercent: 55,
+                recommend: false,
+                advice: '猪肉是常见的肉类，富含蛋白质、B族维生素和铁、锌等矿物质。但脂肪含量较高，建议选择瘦肉部位，适量食用。高血压、高血脂人群应控制摄入。',
+                units: [
+                    { name: '克', gram: 1, cal: 1 },
+                    { name: '薄片', gram: 30, cal: 43 },
+                    { name: '小块', gram: 80, cal: 114 },
+                    { name: '大块', gram: 150, cal: 215 }
+                ]
+            },
+            {
+                id: 12,
+                name: '西瓜',
+                emoji: '🍉',
+                calorie: 31,
+                protein: 0.5,
+                fat: 0.1,
+                carbs: 7.9,
+                fiber: 0.2,
+                gi: 72,
+                gl: 4,
+                category: 'fruit',
+                categoryCompare: '水果',
+                comparePercent: 88,
+                recommend: true,
+                advice: '西瓜含水量高，热量低，是夏季消暑佳品。虽然GI值较高，但GL值低，适量食用对血糖影响不大。富含维生素A和番茄红素。',
+                units: [
+                    { name: '克', gram: 1, cal: 0 },
+                    { name: '块', gram: 100, cal: 31 },
+                    { name: '小份', gram: 250, cal: 78 },
+                    { name: '大份', gram: 500, cal: 155 }
+                ]
+            },
+            {
+                id: 13,
+                name: '面包',
+                emoji: '🍞',
+                calorie: 265,
+                protein: 8.3,
+                fat: 3.3,
+                carbs: 50.0,
+                fiber: 1.5,
+                gi: 70,
+                gl: 35,
+                category: 'grain',
+                categoryCompare: '谷薯制品',
+                comparePercent: 30,
+                recommend: false,
+                advice: '面包热量较高，精制面包GI值高，容易导致血糖波动。建议选择全麦面包，膳食纤维更丰富，饱腹感更强。糖尿病患者应限量食用。',
+                units: [
+                    { name: '克', gram: 1, cal: 3 },
+                    { name: '片(薄)', gram: 25, cal: 66 },
+                    { name: '片(厚)', gram: 40, cal: 106 },
+                    { name: '个', gram: 80, cal: 212 }
+                ]
+            },
+            {
+                id: 14,
+                name: '燕麦',
+                emoji: '🥣',
+                calorie: 367,
+                protein: 15.0,
+                fat: 6.7,
+                carbs: 66.0,
+                fiber: 5.3,
+                gi: 55,
+                gl: 36,
+                category: 'grain',
+                categoryCompare: '谷薯制品',
+                comparePercent: 20,
+                recommend: true,
+                advice: '燕麦富含膳食纤维，特别是β-葡聚糖，有助于降低胆固醇、稳定血糖。是健康的早餐选择，饱腹感强，适合减肥人群。',
+                units: [
+                    { name: '克', gram: 1, cal: 4 },
+                    { name: '勺', gram: 15, cal: 55 },
+                    { name: '小碗', gram: 40, cal: 147 },
+                    { name: '大碗', gram: 80, cal: 294 }
+                ]
+            },
+            {
+                id: 15,
+                name: '酸奶',
+                emoji: '🥛',
+                calorie: 72,
+                protein: 2.5,
+                fat: 2.7,
+                carbs: 9.3,
+                fiber: 0,
+                gi: 33,
+                gl: 3,
+                category: 'dairy',
+                categoryCompare: '乳制品',
+                comparePercent: 65,
+                recommend: true,
+                advice: '酸奶含有益生菌，有助于肠道健康。蛋白质和钙含量丰富，比牛奶更容易消化吸收。建议选择无糖或低糖酸奶，避免添加糖过多。',
+                units: [
+                    { name: '克', gram: 1, cal: 1 },
+                    { name: '小杯', gram: 100, cal: 72 },
+                    { name: '中杯', gram: 150, cal: 108 },
+                    { name: '大杯', gram: 200, cal: 144 }
+                ]
+            }
+        ];
+
+        // DOM 元素
+        const mainPage = document.getElementById('mainPage');
+        const detailPage = document.getElementById('detailPage');
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearBtn');
+        const foodList = document.getElementById('foodList');
+        const hotTags = document.getElementById('hotTags');
+        const backBtn = document.getElementById('backBtn');
+        const favoriteBtn = document.getElementById('favoriteBtn');
+
+        // 收藏列表
+        let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+        // 渲染食物列表
+        function renderFoodList(foods) {
+            if (foods.length === 0) {
+                foodList.innerHTML = `
+                    <div class="no-result">
+                        <div class="icon">🔍</div>
+                        <p>未找到相关食物</p>
+                    </div>
+                `;
+                return;
+            }
+
+            foodList.innerHTML = foods.map(food => `
+                <div class="food-item" data-id="${food.id}">
+                    <div class="food-img">${food.emoji}</div>
+                    <div class="food-info">
+                        <div class="food-name">${food.name}</div>
+                        <div class="food-cal">${food.calorie} 千卡</div>
+                        <div class="food-unit">每100克</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // 绑定点击事件
+            document.querySelectorAll('.food-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const id = parseInt(item.dataset.id);
+                    showDetail(id);
+                });
+            });
+        }
+
+        // 显示详情页
+        function showDetail(id) {
+            const food = foodDatabase.find(f => f.id === id);
+            if (!food) return;
+
+            // 填充数据
+            document.getElementById('detailName').textContent = food.name;
+            
+            // 推荐标签
+            const recommendBadge = document.getElementById('recommendBadge');
+            if (food.recommend) {
+                recommendBadge.style.display = 'inline-flex';
+                recommendBadge.innerHTML = '<span>✓</span><span>推荐食用</span>';
+            } else {
+                recommendBadge.style.display = 'inline-flex';
+                recommendBadge.innerHTML = '<span>⚠️</span><span>适量食用</span>';
+            }
+
+            // 食用建议
+            document.getElementById('adviceText').textContent = food.advice;
+
+            // 血糖相关
+            const giItem = document.getElementById('giItem');
+            const glItem = document.getElementById('glItem');
+            
+            document.getElementById('giValue').textContent = food.gi;
+            document.getElementById('glValue').textContent = food.gl;
+
+            // GI分类
+            let giStatus = document.getElementById('giStatus');
+            giItem.className = 'glycemic-item';
+            if (food.gi <= 55) {
+                giStatus.textContent = '低';
+                giItem.classList.add('low');
+            } else if (food.gi <= 70) {
+                giStatus.textContent = '中';
+                giItem.classList.add('medium');
+            } else {
+                giStatus.textContent = '高';
+            }
+
+            // GL分类
+            let glStatus = document.getElementById('glStatus');
+            glItem.className = 'glycemic-item';
+            if (food.gl <= 10) {
+                glStatus.textContent = '低';
+                glItem.classList.add('low');
+            } else if (food.gl <= 20) {
+                glStatus.textContent = '中';
+                glItem.classList.add('medium');
+            } else {
+                glStatus.textContent = '高';
+            }
+
+            // 热量
+            document.getElementById('calorieValue').textContent = food.calorie;
+            document.getElementById('calorieCompare').textContent = 
+                `热量低于 ${food.comparePercent}% 的${food.categoryCompare}`;
+
+            // 营养素比例
+            const total = food.protein * 4 + food.fat * 9 + food.carbs * 4;
+            const proteinPct = Math.round(food.protein * 4 / total * 100);
+            const fatPct = Math.round(food.fat * 9 / total * 100);
+            const carbsPct = 100 - proteinPct - fatPct;
+
+            document.getElementById('proteinPercent').textContent = proteinPct + '%';
+            document.getElementById('fatPercent').textContent = fatPct + '%';
+            document.getElementById('carbsPercent').textContent = carbsPct + '%';
+
+            // 更新环形图
+            const circumference = 2 * Math.PI * 28;
+            document.getElementById('proteinRing').style.strokeDashoffset = 
+                circumference * (1 - proteinPct / 100);
+            document.getElementById('fatRing').style.strokeDashoffset = 
+                circumference * (1 - fatPct / 100);
+            document.getElementById('carbsRing').style.strokeDashoffset = 
+                circumference * (1 - carbsPct / 100);
+
+            // 营养成分表
+            const tableBody = document.getElementById('nutritionTableBody');
+            tableBody.innerHTML = `
+                <tr>
+                    <td class="nutrient-name">热量</td>
+                    <td class="nutrient-value">${food.calorie} kcal</td>
+                    <td class="nutrient-nrv">${Math.round(food.calorie / 2000 * 100)}%</td>
+                </tr>
+                <tr>
+                    <td class="nutrient-name">蛋白质</td>
+                    <td class="nutrient-value">${food.protein}g</td>
+                    <td class="nutrient-nrv">${Math.round(food.protein / 60 * 100)}%</td>
+                </tr>
+                <tr>
+                    <td class="nutrient-name">脂肪</td>
+                    <td class="nutrient-value">${food.fat}g</td>
+                    <td class="nutrient-nrv">${Math.round(food.fat / 60 * 100)}%</td>
+                </tr>
+                <tr>
+                    <td class="nutrient-name">碳水化合物</td>
+                    <td class="nutrient-value">${food.carbs}g</td>
+                    <td class="nutrient-nrv">${Math.round(food.carbs / 300 * 100)}%</td>
+                </tr>
+                <tr>
+                    <td class="nutrient-name">膳食纤维</td>
+                    <td class="nutrient-value">${food.fiber}g</td>
+                    <td class="nutrient-nrv">${Math.round(food.fiber / 25 * 100)}%</td>
+                </tr>
+            `;
+
+            // 单位换算
+            const unitList = document.getElementById('unitList');
+            unitList.innerHTML = food.units.map(unit => `
+                <div class="unit-item">
+                    <span class="unit-name">${unit.name} (${unit.gram}g)</span>
+                    <span class="unit-cal">${unit.cal} 千卡</span>
+                </div>
+            `).join('');
+
+            // 更新收藏状态
+            updateFavoriteStatus(id);
+
+            // 显示详情页
+            mainPage.classList.add('hidden');
+            detailPage.classList.add('active');
+
+            // 滚动到顶部
+            window.scrollTo(0, 0);
+        }
+
+        // 更新收藏状态
+        function updateFavoriteStatus(id) {
+            const isFav = favorites.includes(id);
+            favoriteBtn.classList.toggle('active', isFav);
+            favoriteBtn.querySelector('.label').textContent = isFav ? '已收藏' : '收藏';
+        }
+
+        // 返回主页面
+        function goBack() {
+            detailPage.classList.remove('active');
+            mainPage.classList.remove('hidden');
+        }
+
+        // 搜索功能
+        function searchFood(keyword) {
+            if (!keyword.trim()) {
+                renderFoodList(foodDatabase);
+                return;
+            }
+
+            const results = foodDatabase.filter(food => 
+                food.name.includes(keyword.trim())
+            );
+            renderFoodList(results);
+        }
+
+        // 事件绑定
+        searchInput.addEventListener('input', (e) => {
+            const value = e.target.value;
+            clearBtn.style.display = value ? 'block' : 'none';
+            searchFood(value);
+        });
+
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            clearBtn.style.display = 'none';
+            searchFood('');
+        });
+
+        backBtn.addEventListener('click', goBack);
+
+        // 热门标签点击
+        hotTags.addEventListener('click', (e) => {
+            if (e.target.classList.contains('hot-tag')) {
+                const keyword = e.target.textContent;
+                searchInput.value = keyword;
+                clearBtn.style.display = 'block';
+                searchFood(keyword);
+            }
+        });
+
+        // 收藏功能
+        favoriteBtn.addEventListener('click', () => {
+            const name = document.getElementById('detailName').textContent;
+            const food = foodDatabase.find(f => f.name === name);
+            if (!food) return;
+
+            const index = favorites.indexOf(food.id);
+            if (index > -1) {
+                favorites.splice(index, 1);
+            } else {
+                favorites.push(food.id);
+            }
+
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            updateFavoriteStatus(food.id);
+        });
+
+        // 记录按钮
+        document.getElementById('recordBtn').addEventListener('click', () => {
+            const name = document.getElementById('detailName').textContent;
+            alert(`已记录: ${name}`);
+        });
+
+        // 初始化
+        renderFoodList(foodDatabase);
+    </script>
+</body>
+</html>
